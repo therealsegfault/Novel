@@ -377,11 +377,53 @@ not `C:\Users\...`.
 
 ---
 
+## The `!` Modifier — Force Override
+
+`!` is a universal override modifier. It means: *"do it now, no checks, no questions asked."*
+It bypasses guards, queues, caches, and conflict detection depending on the keyword it modifies.
+
+`!` appears in two positions depending on the keyword:
+
+- **On the verb** — for direct commands: `remember!`, `shout!`
+- **On the argument** — when `ask` is the invoker: `ask (draw!)`
+
+### Behavior by keyword
+
+| Expression | Normal behavior | With `!` |
+|---|---|---|
+| `remember (x) as file.md` | Fails or prompts if file exists | Overwrites unconditionally |
+| `shout runDrawCode` | Queues if conflicting code is running | Forces immediate execution |
+| `ask (draw!)` | Normal repaint cycle | Forces full repaint, elevated |
+| `ask (fetch!:~/file.md)` | May use cache | Bypasses cache, reads fresh |
+
+### Examples
+
+```novel
+remember! (ask.LastAns) as tile.md     ← overwrite tile.md even if it exists
+shout! runDrawCode                      ← run draw code even if draw is active
+ask (draw!)                             ← force full repaint immediately
+ask (fetch!:~/Documents/data.md)        ← bypass cache, force fresh read
+```
+
+### Rules
+
+- `!` never introduces new behavior — it only removes safety checks on existing behavior
+- Overuse of `!` is a code smell — if you need it everywhere, something is wrong with your logic
+- `!` is not valid on `bye`, `declare`, `are`, or `who` — these have no override semantics
+
+---
+
 ## Appendix — Reserved Keywords
 
 `appN`, `declare`, `==`, `are`, `who`, `ask`, `Really`, `say`, `shout`, `remember`,
 `fetch`, `open`, `func`, `bye`, `yes`, `no`, `Int`, `Str`, `Float`, `Bool`, `List`,
-`Map`, `Func`, `shortterm`
+`Map`, `Func`, `shortterm`, `draw`, `drawNew`, `redraw`, `on`
+
+---
+
+## Appendix — Reserved Modifiers
+
+`!` — force override modifier. Bypasses safety checks, queues, caches, and conflict detection.
 
 ---
 
