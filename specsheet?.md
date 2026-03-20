@@ -206,18 +206,182 @@ bye
 
 ---
 
+## Calling Functions
+
+Functions can be invoked three ways:
+
+```novel
+shout greet                      ← fire and forget, return data is discarded
+ask.(greet)                      ← fire, result stored in ask.LastAns
+remember greet as result         ← fire, result stored in named variable
+```
+
+**`shout`** — direct invocation, no storage. Loud, immediate, doesn't care about the return.
+
+**`ask`** — universal getter. Fires the function and stores the result in `ask.LastAns`.
+
+**`remember`** — fires and stores in one step (see Memory).
+
+Arguments are passed in brackets:
+
+```novel
+ask.(greet ["Aria"])
+shout greet ["Aria"]
+```
+
+---
+
+## Memory & Storage
+
+`remember` stores a value. Where it goes depends on the syntax:
+
+```novel
+remember (ask.LastAns) as userName             ← named variable, in-memory
+remember (ask.LastAns) as notes/pizza.md       ← written to file
+remember (ask.LastAns)                         ← auto-named shortterm1, shortterm2...
+```
+
+### Shortterm slots
+
+When no target is given, Novel auto-assigns `shortterm1`, `shortterm2`, etc. in sequence.
+Shortterm slots are flushed when `bye` is called — they exist only for the lifetime of the script.
+
+```novel
+ask (shortterm1)                ← retrieve shortterm slot 1
+say ask.LastAns
+```
+
+### Files
+
+Files persist past `bye`. Extension determines format (`.md`, `.txt`, `.book`, etc.).
+H++ writes relative to the app's working directory.
+
+### Memory tiers
+
+| Storage         | Syntax                              | Persists past `bye`? |
+|-----------------|-------------------------------------|----------------------|
+| Named variable  | `remember (x) as score`            | No                   |
+| Shortterm slot  | `remember (x)`                     | No — flushed on bye  |
+| File            | `remember (x) as notes/pizza.md`   | Yes                  |
+
+---
+
+## Fetching Data from Disk
+
+Use `fetch:` as a protocol prefix inside `ask` to read from disk.
+Supports standard path syntax including `~` for home directory.
+
+```novel
+ask (fetch:~/Documents/wholikespizza.md)
+say ask.LastAns
+```
+
+`fetch` is provided by the platform module (see Modules).
+
+---
+
+## Modules & Imports
+
+Use `open` to import a module. This is Novel's import system.
+
+```novel
+open linux.fetch_64bit
+open math.advanced
+open com.myapp.utils
+```
+
+### Builtins — always available, no `open` needed
+
+- Core keywords: `say`, `ask`, `who`, `Really`, `remember`, `shout`, `bye`, `are`
+- `math.*` — arithmetic and expressions
+- Language parsing internals
+- **Platform modules** — H++ automatically pulls in the correct platform namespace based on the host OS:
+
+| OS      | Auto-imported namespace |
+|---------|------------------------|
+| Linux   | `linux.*`              |
+| macOS   | `macos.*`              |
+| Windows | `windows.*`            |
+
+Architecture defaults to 64bit unless the H++ installer specifies otherwise.
+This means `fetch:` works out of the box on all platforms — no explicit `open` required
+on standard installs.
+
+### Modules — require `open`
+
+Anything outside the builtins must be explicitly opened. Examples:
+
+| Module              | Provides                        |
+|---------------------|---------------------------------|
+| `linux.fetch_64bit` | Disk read (explicit override)   |
+| `math.advanced`     | Extended math operations        |
+| `io.console`        | Extended console output         |
+| `com.myapp.utils`   | App-specific utilities          |
+
+---
+
 ## H++ Shell Reference
 
-| Command          | Description                        |
-|------------------|------------------------------------|
-| `run apple/clock` | Run the `com.apple.clock` script  |
+| Command                     | Description                                        |
+|-----------------------------|----------------------------------------------------|
+| `run apple/clock`           | Run the `com.apple.clock` script                   |
+| `pkg get linux.fetch_64bit` | Install a module from the H++ package registry     |
+
+---
+
+## H++ Environment
+
+### Platform & Architecture
+
+H++ runs natively on Linux, macOS, and Windows. On install, it detects the host OS
+and architecture, auto-importing the correct platform namespace. Defaults to 64bit
+unless the installer specifies otherwise.
+
+### Package Manager — `pkg get`
+
+Used in the H++ shell to install modules that aren't native to the current platform.
+
+```
+pkg get linux.fetch_64bit
+```
+
+Once installed, the module is available to any Novel script via `open`.
+
+Cross-platform availability:
+
+| Install | Native namespace | `pkg get` unix modules | Sees Windows FS |
+|---------|-----------------|------------------------|-----------------|
+| Linux   | `linux.*`       | N/A — already native   | ❌              |
+| macOS   | `macos.*`       | ✅ (BSD/Unix layer)    | ❌              |
+| Windows | `windows.*`     | ❌ — no Unix layer     | ✅              |
+| WSL     | `linux.*`       | N/A — already native   | ❌              |
+
+Windows cannot use `linux.*` or `macos.*` modules — there is no underlying Unix layer
+to hook into. No WSL bridge is provided.
+
+### Installing H++ on WSL
+
+H++ can be installed inside a WSL environment using the Linux package manager of
+the active distribution:
+
+```
+apt install hplusplus
+paru -S hplusplus
+dnf install hplusplus
+```
+
+A WSL install behaves as a standard Linux install. However, H++ communicates only
+within the WSL vmdisk — it cannot see the Windows filesystem or communicate with
+Windows-native apps. Paths like `~/Documents` resolve to the Linux vmdisk home,
+not `C:\Users\...`.
 
 ---
 
 ## Appendix — Reserved Keywords
 
-`appN`, `declare`, `==`, `are`, `who`, `ask`, `Really`, `say`, `func`, `bye`,
-`yes`, `no`, `Int`, `Str`, `Float`, `Bool`, `List`, `Map`, `Func`
+`appN`, `declare`, `==`, `are`, `who`, `ask`, `Really`, `say`, `shout`, `remember`,
+`fetch`, `open`, `func`, `bye`, `yes`, `no`, `Int`, `Str`, `Float`, `Bool`, `List`,
+`Map`, `Func`, `shortterm`
 
 ---
 
